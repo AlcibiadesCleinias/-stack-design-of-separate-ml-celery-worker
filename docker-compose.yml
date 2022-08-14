@@ -1,0 +1,70 @@
+version: '3.8'
+
+volumes:
+  postgres_data_dev:
+  redis_data_dev:
+
+services:
+  business: &django
+    build:
+      context: ./business-app
+      dockerfile: ./Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./business-app/:/opt/src/
+    ports:
+      - 8000:8000
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=foo
+      - DJANGO_ALLOWED_HOSTS=*
+      - SQL_ENGINE=django.db.backends.postgresql
+      - SQL_DATABASE=hello_django
+      - SQL_USER=hello_django
+      - SQL_PASSWORD=hello_django
+      - SQL_HOST=postgres
+      - SQL_PORT=5432
+      - DATABASE=postgres
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:12.0
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=hello_django
+      - POSTGRES_PASSWORD=hello_django
+      - POSTGRES_DB=hello_django
+    ports:
+      - 5432:5432
+
+  redis:
+    image: redis:6.0.8-alpine
+    volumes:
+      - redis_data_dev:/data
+
+  flower:
+    image: mher/flower:0.9.5
+    ports:
+      - ${DOCKER_FLOWER_PORT-5555}:5555
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
+
+# this service that uses Django code should not be used coz we want different app to be a worker
+#  celery-in-django:
+#    <<: *django
+#    command: celery -A config worker -l info -Q queueForPolls -n celery_in_django@%h
+#    ports: []
+
+# "model-name" - as an example how to name
+  ml-model-name-app:
+    build:
+      context: ./ml-model-name-app
+      dockerfile: ./Dockerfile
+    command: celery -A main worker -l info -Q queueForPolls -c 1 -n celery_in_ml_model_name_app@%h
+    volumes:
+      - ./ml-model-name-app/:/opt/src/
