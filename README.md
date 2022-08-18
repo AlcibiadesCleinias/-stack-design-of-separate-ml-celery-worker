@@ -1,4 +1,4 @@
-# Stack Design of Separate ML Celery Worker
+# Stack Design with Separate ML Celery Worker
 In this repo there is a draft view on how we could divide ML (on python) and api/business logic (Django, Celery Beat) 
 with help of Celery and Redis as a task broker and tmp result storing.
 
