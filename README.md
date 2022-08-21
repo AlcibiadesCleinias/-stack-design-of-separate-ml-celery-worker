@@ -19,7 +19,7 @@ And this request consists of request to make some ML predict.
 2. Via [business-app/clients/ml_model_name_app.py](business-app/clients/ml_model_name_app.py) abstraction class task 
 created and might be tracked.
 3. [ml-model-name-app](ml-model-name-app) as a worker subscribed on a Celery queue in Redis and after executing saves result into redis
-4. When it is needed [business-app](business-app) get result from Redis and either return to user via API or save into SQL DB, 
+4. When it is needed [business-app](business-app) get result via [special ML-client class](https://github.com/AlcibiadesCleinias/stack-design-with-separate-ml-celery-worker/blob/main/business-app/clients/ml_model_name_app.py#L19) (i.e. from Redis) and either return to user via API or save into SQL DB, 
 non-SQL DB with its logic
 
 # Note
